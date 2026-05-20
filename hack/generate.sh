@@ -6,22 +6,9 @@
 
 set -e
 
-WHAT="protobuf codegen manifests logcheck"
 CODEGEN_GROUPS=""
 MANIFESTS_DIRS=""
 MODE=""
-MAX_PARALLEL_WORKERS="4"
-DEFAULT_MANIFESTS_DIRS=(
-  "charts"
-  "cmd"
-  "example"
-  "extensions"
-  "imagevector"
-  "pkg"
-  "plugin"
-  "test"
-  "third_party"
-)
 
 parse_flags() {
   while test $# -gt 0; do
@@ -94,7 +81,7 @@ run_target() {
       local mode="${MODE:-parallel}"
 
       if [[ -z "$MANIFESTS_DIRS" ]]; then
-        which=("${DEFAULT_MANIFESTS_DIRS[@]}")
+        IFS=' ' read -ra which <<< "$DEFAULT_MANIFESTS_DIRS"
       else
         IFS=' ' read -ra which <<< "$MANIFESTS_DIRS"
       fi
@@ -102,9 +89,9 @@ run_target() {
       printf "\n> Generating manifests for folders: %s\n" "${which[*]}"
       if [[ "$mode" == "sequential" ]]; then
         # In sequential mode, paths need to be converted to go package notation (e.g., ./charts/...)
-        $REPO_ROOT/hack/generate-sequential.sh $(overwrite_paths "${which[@]}")
+        $REPO_TOOLS_HACK_DIR/generate-sequential.sh $(overwrite_paths "${which[@]}")
       elif [[ "$mode" == "parallel" ]]; then
-        $REPO_ROOT/hack/generate-parallel.sh "${which[@]}"
+        $REPO_TOOLS_HACK_DIR/generate-parallel.sh "${which[@]}"
       else
         printf "ERROR: Invalid mode ('%s'). Specify either 'parallel' or 'sequential'\n\n" "$mode"
         exit 1
@@ -125,3 +112,5 @@ IFS=' ' read -ra TARGETS <<< "$WHAT"
 for target in "${TARGETS[@]}"; do
   run_target "$target"
 done
+
+make -C "$REPO_ROOT" format

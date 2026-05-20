@@ -8,13 +8,21 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-CURRENT_DIR="$(dirname $0)"
-PROJECT_ROOT="${CURRENT_DIR}"/..
-if [ "${PROJECT_ROOT#/}" == "${PROJECT_ROOT}" ]; then
-  PROJECT_ROOT="./$PROJECT_ROOT"
+# Use REPO_ROOT if set, otherwise calculate from script location
+if [ -n "${REPO_ROOT:-}" ]; then
+  PROJECT_ROOT="$REPO_ROOT"
+else
+  CURRENT_DIR="$(dirname $0)"
+  PROJECT_ROOT="${CURRENT_DIR}"/..
+  if [ "${PROJECT_ROOT#/}" == "${PROJECT_ROOT}" ]; then
+    PROJECT_ROOT="./$PROJECT_ROOT"
+  fi
 fi
 
 pushd "$PROJECT_ROOT" > /dev/null
+
+# Get the current module name dynamically
+CURRENT_MODULE="$(go list -m)"
 
 # Helper function to check if package has changed
 package_changed() {
@@ -110,7 +118,7 @@ should_generate_api_docs() {
 
   # Check if any package changed
   for pkg in $packages; do
-    local pkg_path="${pkg#github.com/gardener/gardener/}"
+    local pkg_path="${pkg#$CURRENT_MODULE/}"
     if ! git diff --quiet master -- "$pkg_path" 2>/dev/null; then
       return 0
     fi
@@ -219,7 +227,7 @@ should_generate_mocks() {
 
 # Collect directories that need generation
 ROOTS=${ROOTS:-$(
-  git grep -l '//go:generate' "$@" | awk '
+  git grep -l '//go:generate' -- "$@" | awk '
     {
       if (/\//) { sub(/\/[^\/]+$/, ""); } else { $0 = "."; }
       if (!seen[$0]++) {
@@ -278,13 +286,13 @@ echo "$ROOTS" | while IFS= read -r dir; do
     done
 
     if [ "$needs_gen" = true ]; then
-      echo "github.com/gardener/gardener/$dir"
+      echo "$CURRENT_MODULE/$dir"
     else
-      echo "Skipping github.com/gardener/gardener/$dir (no changes detected)" >&2
+      echo "Skipping $CURRENT_MODULE/$dir (no changes detected)" >&2
     fi
   else
     # Directory has non-skippable directives, always generate
-    echo "github.com/gardener/gardener/$dir"
+    echo "$CURRENT_MODULE/$dir"
   fi
   # TODO(rrhubenov): Revisit whether MAX_PARALLEL_WORKERS will be needed after prow cluster nodes start using coreutils >= 9.8. Ref: https://github.com/gardener/gardener/pull/13903#issuecomment-3835448178
 done | parallel --will-cite $([ "${MAX_PARALLEL_WORKERS}" != "" ] && echo "-j ${MAX_PARALLEL_WORKERS}") 'echo "Generate {}"; go generate {}'
