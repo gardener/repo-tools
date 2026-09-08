@@ -28,7 +28,7 @@ When creating new source code files the license and copyright information should
 
 ```
 /*
- * SPDX-FileCopyrightText: SAP SE or an SAP affiliate company and Gardener contributors
+ * SPDX-FileCopyrightText: Contributors to the Gardener project
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -50,13 +50,13 @@ SPDX-PackageDownloadLocation = "https://github.com/gardener/<repo name>"
 [[annotations]]
 path = ["*"]
 precedence = "aggregate"
-SPDX-FileCopyrightText = "SAP SE or an SAP affiliate company and Gardener contributors"
+SPDX-FileCopyrightText = "Contributors to the Gardener project"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
 path = "**.md"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "SAP SE or an SAP affiliate company and Gardener contributors"
+SPDX-FileCopyrightText = "Contributors to the Gardener project"
 SPDX-License-Identifier = "CC-BY-4.0"
 
 # third-party - copied source code
@@ -83,14 +83,14 @@ SPDX-License-Identifier = "Apache-2.0"
 [[annotations]]
 path = ".ci/*"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "SAP SE or an SAP affiliate company and Gardener contributors"
+SPDX-FileCopyrightText = "Contributors to the Gardener project"
 SPDX-License-Identifier = "Apache-2.0"
 ```
 
 #### Modifications
 In case you modify copied/forked source code you must state this in the header via the following text:
 
-**Modifications Copyright <year> SAP SE or an SAP affiliate company and Gardener contributors**
+**Modifications Copyright <year> Contributors to the Gardener project**
 
 
 ### Get your reuse badge
